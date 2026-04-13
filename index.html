@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title> My plugins | _gengis</title>
+
+  <link rel="icon" href="icon.ico" type="image/x-icon">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Silkscreen&family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #050a0d; /* Un negro azulado más profundo (Sculk) */
+      color: #c9e8f0;
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background-image: 
+        radial-gradient(circle at 15% 50%, rgba(0, 229, 255, 0.03) 0%, transparent 50%),
+        radial-gradient(circle at 85% 30%, rgba(0, 188, 212, 0.03) 0%, transparent 50%);
+    }
+
+    /* ── Partículas (Estilo almas del Warden) ── */
+    #particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: #00e5ff;
+      border-radius: 50%;
+      opacity: 0;
+      box-shadow: 0 0 8px 2px rgba(0, 229, 255, 0.6);
+      animation: floatUp linear infinite;
+    }
+    @keyframes floatUp {
+      0%   { transform: translateY(100vh) translateX(0px); opacity: 0; }
+      10%  { opacity: 0.8; }
+      90%  { opacity: 0.3; }
+      100% { transform: translateY(-120px) translateX(40px); opacity: 0; }
+    }
+
+    /* ── Hero Section ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      padding: 120px 48px 80px;
+      text-align: center;
+      background: radial-gradient(ellipse 60% 60% at 50% 0%, rgba(0, 229, 255, 0.08) 0%, transparent 70%);
+      border-bottom: 1px solid rgba(0,229,255,0.1);
+    }
+    .hero-eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 6px;
+      color: #00bcd4;
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      opacity: 0.8;
+      text-shadow: 0 0 10px rgba(0, 188, 212, 0.5);
+    }
+    .hero-title {
+      font-family: 'Silkscreen', cursive; /* Fuente pixelada de Minecraft */
+      font-size: clamp(36px, 6vw, 72px);
+      letter-spacing: 1px;
+      line-height: 1.1;
+      margin-bottom: 15px;
+      background: linear-gradient(135deg, #ffffff 0%, #00e5ff 50%, #00838f 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 0 15px rgba(0, 229, 255, 0.3));
+    }
+    .hero-byline {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(14px, 2vw, 20px);
+      font-weight: 400;
+      letter-spacing: 4px;
+      color: #4dd0e1;
+      margin-bottom: 45px;
+      text-shadow: 0 0 8px rgba(77, 208, 225, 0.4);
+    }
+    .hero-intro-box {
+      margin: 0 auto;
+      max-width: 700px;
+      min-height: 90px;
+      background: rgba(0, 229, 255, 0.03);
+      border: 1px solid rgba(0, 229, 255, 0.15);
+      border-radius: 8px; 
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.02), 0 0 15px rgba(0, 0, 0, 0.5);
+      position: relative; /* Para que el bloque y el sprite se anclen a él */
+    }
+    .intro-text {
+      font-family: 'Inter', sans-serif;
+      font-size: 16px;
+      line-height: 1.8;
+      color: #bdf2fb;
+      letter-spacing: 0.3px;
+    }
+    .cursor-blink {
+      display: inline-block;
+      width: 8px; 
+      height: 1em;
+      background: #00e5ff;
+      margin-left: 4px;
+      vertical-align: middle;
+      animation: blink 0.8s step-end infinite;
+      box-shadow: 0 0 8px #00e5ff;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* ── Contenedor del Bloque Musical (Alineado a la izquierda) ── */
+    .note-block-container {
+      position: absolute;
+      left: -100px; 
+      top: 50%; 
+      transform: translateY(-50%); 
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      z-index: 10;
+    }
+    .click-me-text {
+      font-family: 'Silkscreen', cursive;
+      font-size: 12px;
+      color: #00e5ff;
+      text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+      animation: bounceText 1.5s infinite;
+    }
+    .note-block {
+      width: 64px;
+      height: 64px;
+      background-image: url('img/note-block.png'); 
+      background-size: cover;
+      image-rendering: pixelated; 
+      cursor: pointer;
+      transition: filter 0.2s;
+    }
+    .note-block:hover {
+      filter: brightness(1.2);
+    }
+    .note-block.hit {
+      animation: blockJump 0.2s ease-out;
+    }
+    @keyframes blockJump {
+      0%   { transform: translateY(0); }
+      50%  { transform: translateY(-15px); }
+      100% { transform: translateY(0); }
+    }
+    @keyframes bounceText {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-5px); }
+    }
+
+    /* ── Sprite Animado (Derecha) ── */
+    .pixel-sprite {
+      position: absolute;
+      right: -40px; 
+      top: -30px; 
+      width: 64px; 
+      height: 64px; 
+      background: url('img/sprite.png') left center;
+      animation: playSprite 0.8s steps(4) infinite;
+      z-index: 5;
+      filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.4)); 
+    }
+    @keyframes playSprite {
+      100% { background-position: -256px; } 
+    }
+
+    /* ── Divisor (Ojo del Warden) ── */
+    .warden-divider {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0 48px;
+      margin: 60px 0 50px;
+    }
+    .warden-divider::before,
+    .warden-divider::after {
+      content: '';
+      flex: 1;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(0,229,255,0.3), transparent);
+    }
+    .divider-eye {
+      flex-shrink: 0;
+      width: 40px;
+      height: 18px;
+      border: 2px solid rgba(0, 229, 255, 0.8);
+      border-radius: 50%;
+      position: relative;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.2) inset;
+    }
+    .divider-eye::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 8px;
+      height: 8px;
+      background: #00e5ff;
+      border-radius: 50%;
+      animation: eyePulse 3s ease-in-out infinite;
+    }
+    @keyframes eyePulse {
+      0%, 100% { opacity: 1; box-shadow: 0 0 10px #00e5ff, 0 0 20px rgba(0,229,255,0.6); }
+      50%      { opacity: 0.15; box-shadow: none; }
+    }
+
+    /* ── Plugins section ── */
+    .plugins-section {
+      position: relative;
+      z-index: 1;
+      padding: 0 48px 100px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      letter-spacing: 5px;
+      color: #00bcd4;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      text-shadow: 0 0 8px rgba(0, 188, 212, 0.4);
+    }
+    .section-title {
+      font-family: 'Silkscreen', cursive;
+      font-size: 42px;
+      color: #ffffff;
+      margin-bottom: 50px;
+      text-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+    }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 32px;
+    }
+
+    /* ── Tarjetas (Cards) ── */
+    .card-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .card-version {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      color: #4dd0e1;
+      text-transform: uppercase;
+      padding-left: 4px;
+      text-shadow: 0 0 5px rgba(77, 208, 225, 0.5);
+    }
+    .card {
+      position: relative;
+      height: 240px;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      border: 1px solid rgba(0,229,255,0.2);
+      transition:
+        transform 0.3s cubic-bezier(.34,1.56,.64,1),
+        box-shadow 0.3s ease,
+        border-color 0.3s ease;
+      background-color: #081217;
+      background-size: cover;
+      background-position: center;
+      text-decoration: none;
+      display: block;
+    }
+    .card:hover {
+      transform: translateY(6px) scale(0.98);
+      box-shadow:
+        0 0 0 1px rgba(0,229,255,0.6),
+        0 0 30px rgba(0,229,255,0.3),
+        0 20px 40px rgba(0,0,0,0.6);
+      border-color: rgba(0,229,255,0.8);
+    }
+    .card-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        180deg,
+        rgba(3, 8, 11, 0.85) 0%,
+        rgba(3, 8, 11, 0.75) 40%,
+        rgba(0, 15, 20, 0.95) 100%
+      );
+      z-index: 1;
+      transition: background 0.3s ease;
+    }
+    .card:hover .card-overlay {
+      background: linear-gradient(
+        180deg,
+        rgba(3, 8, 11, 0.70) 0%,
+        rgba(3, 8, 11, 0.60) 40%,
+        rgba(0, 15, 20, 0.90) 100%
+      );
+    }
+    .card-shine {
+      position: absolute;
+      top: 0;
+      left: -120%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(
+        105deg,
+        transparent 30%,
+        rgba(0,229,255,0.2) 50%,
+        rgba(0,229,255,0.05) 60%,
+        transparent 70%
+      );
+      z-index: 2;
+      pointer-events: none;
+      transition: left 0s;
+    }
+    .card:hover .card-shine {
+      left: 200%;
+      transition: left 0.7s ease;
+    }
+    .card-content {
+      position: relative;
+      z-index: 3;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 24px;
+    }
+    .card-tag {
+      display: inline-block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      background: rgba(0,229,255,0.15);
+      border: 1px solid rgba(0,229,255,0.4);
+      color: #00e5ff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      width: fit-content;
+      box-shadow: 0 0 10px rgba(0, 229, 255, 0.1);
+    }
+    .card-name {
+      font-family: 'Silkscreen', cursive;
+      font-size: 26px;
+      color: #ffffff;
+      line-height: 1.1;
+      text-shadow: 0 0 15px rgba(0,229,255,0.8);
+      margin-bottom: 8px;
+    }
+    .card-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      color: #92dce8;
+      line-height: 1.6;
+    }
+    .card-arrow {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 3;
+      opacity: 0;
+      transform: translate(-10px, 10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      color: #00e5ff;
+      font-size: 22px;
+      font-weight: bold;
+      text-shadow: 0 0 10px #00e5ff;
+    }
+    .card:hover .card-arrow { opacity: 1; transform: translate(0, 0); }
+
+    /* Imágenes de fondo (Reemplaza con tus fondos) */
+    .card-grise      { background-image: url('img/grise-bg.jpg'); }
+    .card-boxtop     { background-image: url('img/boxtop-bg.jpg'); }
+    .card-findgame   { background-image: url('img/findgame-bg.jpg'); }
+    .card-lancercore { background-image: url('img/lancercore-bg.jpg'); }
+
+    /* ── Controles de Música y Créditos ── */
+    .music-wrapper {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 15px; 
+    }
+    .music-credit {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: rgba(0, 229, 255, 0.7);
+      text-shadow: 0 0 5px rgba(0, 229, 255, 0.3);
+      background: rgba(5, 10, 13, 0.6);
+      padding: 6px 12px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 229, 255, 0.2);
+      opacity: 0;
+      transform: translateX(20px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none; 
+    }
+    .music-wrapper:hover .music-credit,
+    .music-wrapper.is-active .music-credit {
+      opacity: 1;
+      transform: translateX(0);
+    }
+    .music-btn {
+      position: relative;
+      background: rgba(5, 10, 13, 0.85);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #00e5ff;
+      font-size: 22px;
+      backdrop-filter: blur(5px);
+      transition: all 0.3s ease;
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.1);
+    }
+    .music-btn:hover {
+      transform: scale(1.1);
+      border-color: rgba(0, 229, 255, 0.8);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+    }
+    .music-btn.playing {
+      animation: musicPulse 2s infinite;
+      border-color: rgba(0, 229, 255, 0.6);
+    }
+
+    /* ── Footer ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding: 30px 20px;
+      border-top: 1px solid rgba(0,229,255,0.1);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 3px;
+      color: rgba(0,229,255,0.4);
+    }
+
+    /* ── Responsive Móviles ── */
+    @media (max-width: 768px) {
+      .note-block-container {
+        left: 50%;
+        top: -85px;
+        transform: translateX(-50%);
+      }
+    }
+    @media (max-width: 640px) {
+      .hero               { padding: 80px 24px 60px; }
+      .plugins-section    { padding: 0 24px 80px; }
+      .warden-divider     { padding: 0 24px; }
+      .cards-grid         { grid-template-columns: 1fr; gap: 24px; }
+      .card               { height: 200px; }
+      .pixel-sprite       { display: none; }
+      .music-wrapper      { bottom: 20px; right: 20px; }
+      .music-btn          { width: 44px; height: 44px; font-size: 18px; }
+      .music-credit       { font-size: 9px; padding: 4px 8px; }
+    }
+
+    /* ── Cargar la fuente oficial de encantamientos ── */
+    @font-face {
+      font-family: 'Galactic';
+      src: url('fonts/minecraft-enchantment.ttf') format('truetype');
+    }
+
+    /* Clase que activaremos con JavaScript */
+    .is-enchanting {
+      font-family: 'Galactic', sans-serif !important;
+      font-size: 18px; /* Un poco más grande para que se lean bien las runas */
+      letter-spacing: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="particles"></div>
+
+  <audio id="bg-music" loop preload="auto">
+    <source src="music/ambient.mp3" type="audio/mpeg">
+  </audio>
+
+  <div class="music-wrapper">
+    <span class="music-credit">Minecraft: Creator – 8-bit VRC6 Cover</span>
+    <button id="music-toggle" class="music-btn" title="Toggle Music">
+      <span id="music-icon">🔇</span>
+    </button>
+  </div>
+
+  <header class="hero">
+    <p class="hero-eyebrow">Minecraft Plugin Development</p>
+    <h1 class="hero-title">My Plugins</h1>
+    <p class="hero-byline">made by _gengis</p>
+
+    <div class="hero-intro-box">
+      
+      <div class="note-block-container">
+        <span class="click-me-text">CLICK ME!</span>
+        <div id="note-block" class="note-block"></div>
+      </div>
+
+      <p class="intro-text">
+        <span id="typed-text"></span><span class="cursor-blink"></span>
+      </p>
+      
+      <div class="pixel-sprite"></div>
+    </div>
+  </header>
+
+  <div class="warden-divider">
+    <div class="divider-eye"></div>
+  </div>
+
+  <main class="plugins-section">
+    <p class="section-label">Catalogue</p>
+    <h2 class="section-title">Plugins</h2>
+
+    <div class="cards-grid">
+      <div class="card-wrapper">
+        <span class="card-version">1.21+</span>
+        <a class="card card-grise" href="/docs/g-rise.html" target="_blank" title="G-Rise documentation">
+          <div class="card-overlay"></div>
+          <div class="card-shine"></div>
+          <span class="card-arrow">&#8599;</span>
+          <div class="card-content">
+            <span class="card-tag">Minigame</span>
+            <p class="card-name">[G-Rise]</p>
+            <p class="card-desc">Vertical parkour powered by the Mace &amp; Wind Burst enchantment.</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="card-wrapper">
+        <span class="card-version">1.12.2 &ndash; 1.21+</span>
+        <a class="card card-boxtop" href="/docs/boxtop.html" target="_blank" title="BoxTop documentation">
+          <div class="card-overlay"></div>
+          <div class="card-shine"></div>
+          <span class="card-arrow">&#8599;</span>
+          <div class="card-content">
+            <span class="card-tag">Utility</span>
+            <p class="card-name">[BoxTop]</p>
+            <p class="card-desc">Advanced block-top leaderboard system for any server.</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="card-wrapper">
+        <span class="card-version">1.16 &ndash; 1.21+</span>
+        <a class="card card-findgame" href="/docs/findgame.html" target="_blank" title="FindGame documentation">
+          <div class="card-overlay"></div>
+          <div class="card-shine"></div>
+          <span class="card-arrow">&#8599;</span>
+          <div class="card-content">
+            <span class="card-tag">Matchmaking</span>
+            <p class="card-name">[FindGame]</p>
+            <p class="card-desc">Smart cross-server matchmaking &amp; queue engine.</p>
+          </div>
+        </a>
+      </div>
+
+      <div class="card-wrapper">
+        <span class="card-version">1.21</span>
+        <a class="card card-lancercore" href="/docs/lancercore.html" target="_blank" title="LancerCore documentation">
+          <div class="card-overlay"></div>
+          <div class="card-shine"></div>
+          <span class="card-arrow">&#8599;</span>
+          <div class="card-content">
+            <span class="card-tag">Framework</span>
+            <p class="card-name">[LancerCore]</p>
+            <p class="card-desc">Shared library &amp; API powering all _gengis plugins.</p>
+          </div>
+        </a>
+      </div>
+
+    </div>
+  </main>
+
+  <footer>
+    &copy; 2026 _gengis &mdash; all rights reserved
+  </footer>
+
+  <script>
+    // 1. Partículas
+    (function () {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 40; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const big = Math.random() < 0.25;
+        p.style.cssText = [
+          'left:' + (Math.random() * 100) + '%',
+          'bottom:' + (Math.random() * 20) + '%',
+          'width:' + (big ? 4 : 2) + 'px',
+          'height:' + (big ? 4 : 2) + 'px',
+          'animation-duration:' + (6 + Math.random() * 8) + 's',
+          'animation-delay:' + (Math.random() * 5) + 's',
+        ].join(';');
+        container.appendChild(p);
+      }
+    })();
+
+    // 2. Animación de Texto y Encantamientos
+    const ENCHANT = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+    const MESSAGES = [
+      {
+        lang: 'en',
+        text: 'Hello, here are all my plugins with their documentation. Crafted with a focus on performance and clean architecture.'
+      },
+      { lang: 'enchant', text: '' },
+      {
+        lang: 'es',
+        text: 'Hola, aquí están todos mis plugins con su documentación. Construidos con enfoque en rendimiento y arquitectura limpia.'
+      },
+      { lang: 'enchant', text: '' },
+    ];
+
+    let msgIdx = 0;
+    let charIdx = 0;
+    const el = document.getElementById('typed-text');
+
+    function randEnchant(len) {
+      let s = '';
+      const src = ENCHANT;
+      for (let i = 0; i < len; i++) s += src[Math.floor(Math.random() * src.length)];
+      return s;
+    }
+
+    function typeNext() {
+      const cur = MESSAGES[msgIdx];
+      if (cur.lang === 'enchant') { glitchPhase(); return; }
+      if (charIdx <= cur.text.length) {
+        el.textContent = cur.text.slice(0, charIdx);
+        charIdx++;
+        setTimeout(typeNext, charIdx < 5 ? 55 : 24);
+      } else {
+        setTimeout(erasePhase, 3500);
+      }
+    }
+
+    function erasePhase() {
+      const cur = MESSAGES[msgIdx];
+      if (charIdx > 0) {
+        charIdx--;
+        el.textContent = cur.text.slice(0, charIdx);
+        setTimeout(erasePhase, 10);
+      } else {
+        msgIdx = (msgIdx + 1) % MESSAGES.length;
+        charIdx = 0;
+        setTimeout(typeNext, 300);
+      }
+    }
+
+   // 2. Actualizamos la fase de glitch para usar la nueva clase CSS
+    function glitchPhase() {
+      let rounds = 0;
+      const max = 22;
+      const startLen = 45;
+      
+      // Añadimos el color cyan, el brillo y NUESTRA FUENTE DE MINECRAFT
+      el.style.color = '#00e5ff';
+      el.style.textShadow = '0 0 10px #00e5ff';
+      el.classList.add('is-enchanting'); // ¡Aquí se activa la fuente!
+
+      (function tick() {
+        rounds++;
+        const len = Math.max(3, startLen - Math.floor(rounds * 1.8));
+        el.textContent = randEnchant(len);
+        if (rounds < max) {
+          setTimeout(tick, 40 + rounds * 4);
+        } else {
+          // Limpiamos todo para que el siguiente idioma (inglés/español) salga normal
+          el.textContent = '';
+          el.style.color = '';
+          el.style.textShadow = '';
+          el.classList.remove('is-enchanting'); // ¡Apagamos la fuente!
+          
+          msgIdx = (msgIdx + 1) % MESSAGES.length;
+          charIdx = 0;
+          setTimeout(typeNext, 250);
+        }
+      })();
+    
+    }
+
+    setTimeout(typeNext, 800);
+
+    // 3. Lógica de Música Ambiental
+    const music = document.getElementById('bg-music');
+    const musicBtn = document.getElementById('music-toggle');
+    const musicIcon = document.getElementById('music-icon');
+    const musicWrapper = document.querySelector('.music-wrapper');
+    
+    let isPlaying = false;
+    let userHasInteracted = false; 
+
+    music.volume = 0.2; 
+
+    function toggleMusic() {
+      if (isPlaying) {
+        music.pause();
+        musicIcon.textContent = '🔇';
+        musicBtn.classList.remove('playing');
+        musicWrapper.classList.remove('is-active');
+      } else {
+        music.play();
+        musicIcon.textContent = '🔊';
+        musicBtn.classList.add('playing');
+        musicWrapper.classList.add('is-active');
+      }
+      isPlaying = !isPlaying;
+    }
+
+    // Clic en el botón
+    musicBtn.addEventListener('click', (e) => {
+      e.stopPropagation(); 
+      userHasInteracted = true;
+      toggleMusic();
+    });
+
+    // Clic en el fondo (auto-play ninja)
+    document.body.addEventListener('click', () => {
+      if (!userHasInteracted && !isPlaying) {
+        userHasInteracted = true;
+        music.play().then(() => {
+          isPlaying = true;
+          musicIcon.textContent = '🔊';
+          musicBtn.classList.add('playing');
+          musicWrapper.classList.add('is-active');
+          console.log("Música ambiental iniciada por clic en el fondo.");
+        }).catch(err => console.log("Navegador bloqueó el autoplay."));
+      }
+    });
+
+    // 4. Lógica del Bloque Musical
+    const noteBlock = document.getElementById('note-block');
+    const noteSound = new Audio('music/bit.mp3');
+    noteSound.volume = 0.5;
+
+    noteBlock.addEventListener('click', (e) => {
+      e.stopPropagation(); 
+      console.log("¡Bloque golpeado!");
+
+      // Salto del bloque
+      noteBlock.classList.remove('hit');
+      void noteBlock.offsetWidth; 
+      noteBlock.classList.add('hit');
+
+      // Reproduce bit.mp3
+      noteSound.currentTime = 0; 
+      noteSound.play().catch(err => console.error("Error al reproducir bit.mp3:", err));
+
+      // Activa música si estaba apagada
+      if (!isPlaying) {
+        userHasInteracted = true;
+        music.play().then(() => {
+          isPlaying = true;
+          musicIcon.textContent = '🔊';
+          musicBtn.classList.add('playing');
+          musicWrapper.classList.add('is-active');
+        });
+      }
+    });
+  </script>
+</body>
+</html>
